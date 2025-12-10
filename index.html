@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SysOps Monitor v2.0 // NEBULA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Base Settings */
+        :root {
+            --neon-blue: #00f3ff;
+            --neon-purple: #bc13fe;
+            --bg-dark: #050511;
+            --glass-bg: rgba(20, 20, 35, 0.6);
+            --glass-border: rgba(0, 243, 255, 0.3);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0b0b1a; }
+        ::-webkit-scrollbar-thumb { background: #3b3b5c; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-blue); }
+
+        /* Starfield Animation */
+        #star-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+        }
+
+        .star-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            animation: moveStars linear infinite;
+        }
+
+        @keyframes moveStars {
+            from { transform: translateY(0); }
+            to { transform: translateY(-100vh); }
+        }
+
+        /* Glass Panels */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 0 25px rgba(188, 19, 254, 0.2), inset 0 0 10px rgba(0, 243, 255, 0.1);
+            border-color: var(--neon-blue);
+        }
+        
+        /* Neon Effects */
+        .neon-text-blue { 
+            color: var(--neon-blue);
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.6); 
+        }
+        
+        .neon-text-purple { 
+            color: var(--neon-purple);
+            text-shadow: 0 0 8px rgba(188, 19, 254, 0.6); 
+        }
+
+        .neon-border { 
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.2), inset 0 0 5px rgba(188, 19, 254, 0.1); 
+        }
+        
+        /* Gauge & Charts */
+        .gauge-bg { stroke: #1e293b; }
+        .gauge-fill { 
+            transition: stroke-dashoffset 0.6s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.3s;
+            filter: drop-shadow(0 0 5px currentColor);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-entry {
+            animation: fadeInUp 0.7s ease-out forwards;
+            opacity: 0;
+        }
+
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-150%); }
+            100% { transform: translateX(150%); }
+        }
+
+        .shimmer-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(188, 19, 254, 0.2), transparent);
+            transform: translateX(-100%);
+        }
+
+        .shimmering {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .shimmering .shimmer-overlay {
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; text-shadow: 0 0 10px var(--neon-blue); }
+            50% { opacity: 0.8; text-shadow: 0 0 20px var(--neon-purple); }
+        }
+        
+        .pulse-update { animation: pulse-glow 0.8s ease-in-out; }
+
+        /* Simple Mode Toggle */
+        .simple-mode {
+            background: #000 !important;
+        }
+        .simple-mode #star-container { display: none; }
+    </style>
+</head>
+<body class="font-mono min-h-screen p-4 md:p-8">
+    
+    <!-- Background Stars -->
+    <div id="star-container"></div>
+
+    <!-- Header -->
+    <header class="animate-entry mb-8 flex flex-col md:flex-row justify-between items-center glass-panel p-5 rounded-2xl neon-border z-10 relative">
+        <div class="flex items-center gap-5">
+            <div class="relative group">
+                <i class="fa-solid fa-satellite-dish text-4xl text-cyan-400 group-hover:rotate-12 transition-transform duration-500"></i>
+                <div class="absolute inset-0 bg-cyan-400 blur-xl opacity-20 animate-pulse"></div>
+            </div>
+            <div>
+                <h1 class="text-3xl font-black tracking-widest neon-text-blue italic">N E B U L A <span class="text-xs not-italic text-purple-400 font-normal ml-2 tracking-normal">// SYS.MON</span></h1>
+                <p class="text-xs text-purple-300 mt-1 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
+                    HOST: <span id="hostname" class="text-white font-bold">DETECTING...</span> | UPTIME: <span id="uptime">--:--:--</span>
+                </p>
+            </div>
+        </div>
+        <div class="flex items-center gap-4 mt-4 md:mt-0">
+            <div id="connection-status" class="px-4 py-1.5 rounded-full text-xs font-bold bg-red-900/40 text-red-400 border border-red-500/50 transition-all backdrop-blur-md">
+                <i class="fa-solid fa-circle-xmark mr-2"></i>OFFLINE
+            </div>
+            <button onclick="toggleTheme()" class="p-2.5 rounded-xl border border-gray-700 hover:border-cyan-400 hover:bg-cyan-900/30 hover:text-cyan-400 transition-all active:scale-95 text-gray-400">
+                <i class="fa-solid fa-eye"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        <!-- CPU Load -->
+        <div class="glass-panel animate-entry delay-100 p-6 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden group">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-50"></div>
+            <h3 class="text-xs text-cyan-300 uppercase tracking-[0.2em] mb-4 w-full border-b border-gray-800 pb-2 flex justify-between items-center">
+                <span><i class="fa-solid fa-microchip mr-2"></i>CPU Core</span>
+                <i class="fa-solid fa-gear fa-spin text-purple-500/50 text-xs" style="animation-duration: 4s"></i>
+            </h3>
+            <div class="relative w-36 h-36 group-hover:scale-105 transition-transform duration-500">
+                <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="72" cy="72" r="66" fill="none" stroke-width="6" class="gauge-bg opacity-30" />
+                    <circle id="cpu-gauge" cx="72" cy="72" r="66" fill="none" stroke-width="6" stroke="#00f3ff" stroke-dasharray="414" stroke-dashoffset="414" stroke-linecap="round" class="gauge-fill" />
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center flex-col">
+                    <span id="cpu-text" class="text-4xl font-black text-white drop-shadow-[0_0_10px_rgba(0,243,255,0.5)]">0%</span>
+                    <span class="text-[10px] text-purple-400 mt-1">CORES: <span id="cpu-cores" class="text-white">--</span></span>
+                </div>
+            </div>
+            <div id="cpu-graph" class="w-full h-10 mt-6 flex items-end gap-[2px] opacity-60">
+                <!-- Bars injected via JS -->
+            </div>
+        </div>
+
+        <!-- RAM Usage -->
+        <div class="glass-panel animate-entry delay-200 p-6 rounded-2xl">
+            <div class="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-transparent via-purple-500 to-transparent opacity-50"></div>
+            <h3 class="text-xs text-purple-300 uppercase tracking-[0.2em] mb-4 border-b border-gray-800 pb-2">
+                <i class="fa-solid fa-memory mr-2"></i>Memory Matrix
+            </h3>
+            <div class="flex justify-between items-end mb-2">
+                <span class="text-3xl font-bold text-white" id="ram-used">0 GB</span>
+                <span class="text-xs text-gray-400">/ <span id="ram-total" class="text-purple-300">0 GB</span></span>
+            </div>
+            <div class="w-full bg-gray-900/80 rounded-sm h-3 mb-6 overflow-hidden shimmering border border-gray-800">
+                <div class="shimmer-overlay"></div>
+                <div id="ram-bar" class="bg-gradient-to-r from-purple-600 to-cyan-500 h-full transition-all duration-700 ease-out relative z-10 shadow-[0_0_15px_rgba(188,19,254,0.5)]" style="width: 0%"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-3 text-[10px] font-bold">
+                <div class="bg-gray-900/50 p-2 rounded border border-gray-800 hover:border-purple-500 transition">
+                    <span class="block text-gray-500 mb-1">BUFFERS</span>
+                    <span id="ram-buffers" class="text-cyan-300 text-sm">--</span>
+                </div>
+                <div class="bg-gray-900/50 p-2 rounded border border-gray-800 hover:border-purple-500 transition">
+                    <span class="block text-gray-500 mb-1">CACHED</span>
+                    <span id="ram-cached" class="text-cyan-300 text-sm">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Disk Usage -->
+        <div class="glass-panel animate-entry delay-300 p-6 rounded-2xl">
+            <h3 class="text-xs text-cyan-300 uppercase tracking-[0.2em] mb-4 border-b border-gray-800 pb-2">
+                <i class="fa-solid fa-hard-drive mr-2"></i>Storage Nodes
+            </h3>
+            <div id="disk-container" class="space-y-4 max-h-[200px] overflow-y-auto pr-2">
+                <!-- Disk Items injected here -->
+                <div class="animate-pulse flex space-x-4">
+                    <div class="flex-1 space-y-2 py-1">
+                        <div class="h-1 bg-gray-800 rounded"></div>
+                        <div class="h-1 bg-gray-800 rounded w-2/3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Network Panel -->
+        <div class="glass-panel animate-entry delay-400 p-6 rounded-2xl flex flex-col relative overflow-hidden">
+             <div class="absolute -right-6 -top-6 w-24 h-24 bg-cyan-500/10 rounded-full blur-2xl animate-pulse"></div>
+            <h3 class="text-xs text-cyan-300 uppercase tracking-[0.2em] mb-4 border-b border-gray-800 pb-2">
+                <i class="fa-solid fa-network-wired mr-2"></i>Net Uplink
+            </h3>
+            <div class="flex flex-col gap-4 flex-grow justify-center">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500 text-xs">INTERFACE</span>
+                    <span id="net-iface" class="font-mono text-purple-300 font-bold bg-purple-900/20 px-2 py-1 rounded border border-purple-500/30">--</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-500 text-xs">IP ADDR</span>
+                    <span id="net-ip" class="font-mono text-white font-bold drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">--.--.--.--</span>
+                </div>
+                <div class="mt-2 pt-3 border-t border-gray-800 flex justify-between items-center">
+                    <span class="text-xs text-gray-500">STATUS</span>
+                    <div class="flex items-center gap-2">
+                         <span class="relative flex h-2 w-2">
+                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                          <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                        </span>
+                        <span class="text-[10px] text-cyan-400 font-bold tracking-widest">CONNECTED</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Process Monitor (Span 2) -->
+        <div class="md:col-span-2 glass-panel animate-entry delay-300 p-6 rounded-2xl">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
+                <h3 class="text-xs text-purple-300 uppercase tracking-[0.2em]">
+                    <i class="fa-solid fa-layer-group mr-2"></i>Active Processes
+                </h3>
+                <span class="text-[10px] bg-purple-900/30 text-purple-300 px-2 py-1 rounded border border-purple-500/30">SORT: CPU_LOAD</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="text-gray-500 border-b border-gray-800/50">
+                            <th class="pb-2 pl-2">PID</th>
+                            <th class="pb-2">USER</th>
+                            <th class="pb-2">COMMAND</th>
+                            <th class="pb-2 text-right">CPU</th>
+                            <th class="pb-2 text-right pr-2">MEM</th>
+                        </tr>
+                    </thead>
+                    <tbody id="process-list" class="font-mono text-gray-300">
+                        <!-- Processes injected here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Battery / Power Consumption (Span 1) -->
+        <div class="md:col-span-1 glass-panel animate-entry delay-400 p-6 rounded-2xl">
+            <div class="flex justify-between items-center mb-4 border-b border-gray-800 pb-2">
+                <h3 class="text-xs text-cyan-300 uppercase tracking-[0.2em]">
+                    <i class="fa-solid fa-bolt mr-2"></i>Power
+                </h3>
+                 <!-- Simplified Status for smaller space -->
+                 <i class="fa-solid fa-plug text-green-400 animate-pulse text-xs"></i>
+            </div>
+            <!-- Changed grid to 1 col for smaller space -->
+            <div class="grid grid-cols-1 gap-3" id="battery-list">
+                <!-- Battery items injected here -->
+            </div>
+        </div>
+        
+        <!-- Terminal Info (Span 1) -->
+        <div class="glass-panel animate-entry delay-400 p-6 rounded-2xl flex flex-col">
+            <h3 class="text-xs text-green-400 uppercase tracking-[0.2em] mb-4 border-b border-gray-800 pb-2">
+                <i class="fa-solid fa-terminal mr-2"></i>Terminal
+            </h3>
+            <ul class="space-y-2 text-[10px] font-mono mb-4">
+                <li class="flex justify-between border-b border-gray-800 pb-1"><span class="text-gray-500">SHELL</span> <span id="term-shell" class="text-white">...</span></li>
+                <li class="flex justify-between border-b border-gray-800 pb-1"><span class="text-gray-500">USER</span> <span id="term-user" class="text-purple-400">...</span></li>
+            </ul>
+            <div class="flex-grow bg-[#020205] p-3 rounded border border-gray-800 text-[10px] text-green-500 h-32 overflow-y-auto font-mono scroll-smooth shadow-inner" id="mock-logs">
+                <div class="opacity-50">_INIT_SEQUENCE_START</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- STAR GENERATOR ---
+        function createStars() {
+            const container = document.getElementById('star-container');
+            const layers = [
+                { count: 150, size: '1px', speed: '50s', opacity: '0.8' }, // Distant
+                { count: 70, size: '2px', speed: '35s', opacity: '0.6' },  // Mid
+                { count: 30, size: '3px', speed: '20s', opacity: '0.4' }   // Close
+            ];
+
+            layers.forEach(layer => {
+                const layerDiv = document.createElement('div');
+                layerDiv.className = 'star-layer';
+                layerDiv.style.animationDuration = layer.speed;
+                
+                let boxShadows = [];
+                for (let i = 0; i < layer.count; i++) {
+                    const x = Math.floor(Math.random() * 100); // vw
+                    const y = Math.floor(Math.random() * 200); // vh (double height for scrolling)
+                    const color = Math.random() > 0.8 ? '#00f3ff' : (Math.random() > 0.8 ? '#bc13fe' : '#fff');
+                    boxShadows.push(`${x}vw ${y}vh 0 ${color}`);
+                }
+                
+                // Add a second set for seamless loop
+                for (let i = 0; i < layer.count; i++) {
+                    const x = Math.floor(Math.random() * 100); 
+                    const y = Math.floor(Math.random() * 200) - 200; // Above viewport
+                    boxShadows.push(`${x}vw ${y}vh 0 #fff`);
+                }
+
+                layerDiv.style.width = layer.size;
+                layerDiv.style.height = layer.size;
+                layerDiv.style.borderRadius = '50%';
+                layerDiv.style.boxShadow = boxShadows.join(',');
+                layerDiv.style.opacity = layer.opacity;
+                
+                container.appendChild(layerDiv);
+            });
+        }
+        createStars();
+
+        // --- DASHBOARD LOGIC ---
+        const API_URL = 'http://localhost:3000/api/stats';
+        let isSimulating = true;
+        let historyCpu = Array(30).fill(5);
+
+        function formatBytes(bytes, decimals = 1) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('simple-mode');
+        }
+        
+        function updateGauge(percentage) {
+            const circle = document.getElementById('cpu-gauge');
+            if (!circle) return;
+            
+            // Radius 66 -> Circumference ~ 414
+            const circumference = 414;
+            const offset = circumference - (percentage / 100) * circumference;
+            circle.style.strokeDashoffset = offset;
+            
+            // Dynamic Color
+            if(percentage > 85) circle.style.stroke = '#ef4444'; // Red
+            else if(percentage > 50) circle.style.stroke = '#bc13fe'; // Purple
+            else circle.style.stroke = '#00f3ff'; // Cyan
+            
+            // Text
+            const textEl = document.getElementById('cpu-text');
+            if (textEl) {
+                textEl.innerText = percentage + '%';
+                if(percentage > 50) textEl.classList.add('neon-text-purple');
+                else textEl.classList.remove('neon-text-purple');
+            }
+
+            // Graph
+            historyCpu.push(percentage);
+            historyCpu.shift();
+            const graphContainer = document.getElementById('cpu-graph');
+            if (graphContainer) {
+                graphContainer.innerHTML = historyCpu.map((val, idx) => {
+                    let opacity = (idx + 5) / 35;
+                    let h = Math.max(10, val);
+                    let bg = val > 80 ? 'bg-red-500' : (val > 50 ? 'bg-purple-500' : 'bg-cyan-500');
+                    return `<div class="flex-1 ${bg} hover:bg-white transition-all duration-300 rounded-t-sm" style="height: ${h}%; opacity: ${opacity}"></div>`
+                }).join('');
+            }
+        }
+
+        function updateRAM(used, total, cached, buffers) {
+            const percent = (used / total) * 100;
+            const elUsed = document.getElementById('ram-used');
+            const elTotal = document.getElementById('ram-total');
+            const elBar = document.getElementById('ram-bar');
+            const elCached = document.getElementById('ram-cached');
+            const elBuffers = document.getElementById('ram-buffers');
+
+            if (elUsed) elUsed.innerText = formatBytes(used);
+            if (elTotal) elTotal.innerText = formatBytes(total);
+            if (elBar) elBar.style.width = percent + '%';
+            if (elCached) elCached.innerText = formatBytes(cached);
+            if (elBuffers) elBuffers.innerText = formatBytes(buffers);
+        }
+
+        function updateDisk(disks) {
+            const container = document.getElementById('disk-container');
+            if (container) {
+                container.innerHTML = disks.map(disk => {
+                    const percent = parseInt(disk.use);
+                    let colorClass = 'bg-cyan-500';
+                    if(percent > 75) colorClass = 'bg-purple-500';
+                    if(percent > 90) colorClass = 'bg-red-500';
+
+                    return `
+                        <div class="hover:bg-white/5 p-2 rounded transition duration-300 border border-transparent hover:border-cyan-500/30">
+                            <div class="flex justify-between text-xs mb-1">
+                                <span class="font-bold text-gray-300 tracking-wider">${disk.mount}</span>
+                                <span class="text-cyan-300 font-mono">${disk.use}</span>
+                            </div>
+                            <div class="w-full bg-gray-800 rounded-full h-1.5 overflow-hidden">
+                                <div class="${colorClass} h-full rounded-full shadow-[0_0_8px_currentColor]" style="width: ${disk.use}"></div>
+                            </div>
+                            <div class="flex justify-between mt-1">
+                                <span class="text-[9px] text-gray-600 uppercase">${disk.fs}</span>
+                                <span class="text-[9px] text-gray-500">${disk.avail} FREE</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // NEW: Network Update Function
+        function updateNetwork(net) {
+            if (!net) return;
+            const elIface = document.getElementById('net-iface');
+            const elIp = document.getElementById('net-ip');
+            
+            if (elIface) elIface.innerText = net.iface;
+            if (elIp) elIp.innerText = net.ip;
+        }
+
+        function updateProcesses(procs) {
+            const tbody = document.getElementById('process-list');
+            if (tbody) {
+                tbody.innerHTML = procs.map(p => `
+                    <tr class="border-b border-gray-800/30 hover:bg-white/5 transition duration-150 cursor-pointer group">
+                        <td class="py-2 pl-2 text-cyan-500/70 font-mono text-[10px] group-hover:text-cyan-400">${p.pid}</td>
+                        <td class="py-2 text-gray-400 group-hover:text-white">${p.user}</td>
+                        <td class="py-2 text-purple-200 truncate max-w-[100px] font-bold" title="${p.cmd}">${p.cmd}</td>
+                        <td class="py-2 text-right text-white font-bold group-hover:text-cyan-300">${p.cpu}%</td>
+                        <td class="py-2 text-right pr-2 text-gray-500 group-hover:text-purple-300">${p.mem}%</td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        function updateBatteryImpact(procs) {
+            const container = document.getElementById('battery-list');
+            if (!container) return;
+            const heavyHitters = procs.slice(0, 4);
+            
+            container.innerHTML = heavyHitters.map(p => {
+                const drain = (parseFloat(p.cpu) * 0.8).toFixed(1);
+                return `
+                    <div class="bg-gray-900/40 p-2 rounded-xl flex items-center justify-between border border-gray-800 hover:border-red-500/50 transition duration-300 group">
+                        <div class="flex items-center gap-2">
+                            <div class="bg-gray-800 w-6 h-6 rounded flex items-center justify-center">
+                                <i class="fa-solid fa-fire text-[10px] text-gray-500 group-hover:text-red-500"></i>
+                            </div>
+                            <div>
+                                <div class="text-[10px] font-bold text-gray-300 group-hover:text-white transition">${p.cmd.substring(0, 10)}</div>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-red-400 font-bold text-[10px]">-${drain}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- SIMULATION DATA ---
+        function generateFakeData() {
+            const cpu = Math.floor(Math.random() * 40) + 5;
+            return {
+                cpu: { usage: cpu, cores: 12 },
+                memory: { total: 32000000000, used: 12000000000 + (Math.random() * 1000000000), free: 4000000000 },
+                disk: [
+                    { fs: 'nvme0n1', size: '1T', used: '450G', avail: '550G', use: '45%', mount: '/' },
+                    { fs: 'sda1', size: '4T', used: '3.2T', avail: '800G', use: '80%', mount: '/mnt/data' }
+                ],
+                // NEW: Network Fake Data
+                network: { iface: 'eth0', ip: '192.168.1.105' },
+                processes: [
+                    { pid: 1337, user: 'root', cpu: (Math.random()*25).toFixed(1), mem: 2.1, cmd: 'dockerd' },
+                    { pid: 8080, user: 'dev', cpu: (Math.random()*15).toFixed(1), mem: 8.5, cmd: 'node-server' },
+                    { pid: 443,  user: 'www', cpu: (Math.random()*10).toFixed(1), mem: 14.2, cmd: 'nginx' },
+                    { pid: 3000, user: 'user', cpu: 3.5, mem: 10.1, cmd: 'chrome-gnome' },
+                    { pid: 22,   user: 'root', cpu: 0.1, mem: 0.5, cmd: 'sshd' }
+                ],
+                system: { hostname: 'NEBULA-STATION-7', uptime: '12d 4h 22m' }
+            };
+        }
+
+        async function fetchData() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 800);
+                const response = await fetch(API_URL, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) throw new Error("API Error");
+                
+                const data = await response.json();
+                
+                if(isSimulating) {
+                     isSimulating = false;
+                     document.getElementById('connection-status').className = "px-4 py-1.5 rounded-full text-xs font-bold bg-green-900/40 text-green-400 border border-green-500/50 transition-all shadow-[0_0_15px_rgba(34,197,94,0.3)]";
+                     document.getElementById('connection-status').innerHTML = '<i class="fa-solid fa-link mr-2 animate-pulse"></i>ONLINE';
+                }
+                return data;
+
+            } catch (err) {
+                if(!isSimulating) console.log("Signal lost. Simulating...");
+                isSimulating = true;
+                document.getElementById('connection-status').className = "px-4 py-1.5 rounded-full text-xs font-bold bg-red-900/40 text-red-400 border border-red-500/50 transition-all";
+                document.getElementById('connection-status').innerHTML = '<i class="fa-solid fa-satellite-dish mr-2"></i>SIMULATING';
+                return generateFakeData();
+            }
+        }
+
+        async function updateDashboard() {
+            const data = await fetchData();
+            if (!data) return; // Safety check
+            
+            const elHost = document.getElementById('hostname');
+            if (elHost) elHost.innerText = data.system.hostname;
+            
+            const elUptime = document.getElementById('uptime');
+            if (elUptime) elUptime.innerText = data.system.uptime;
+            
+            const elCores = document.getElementById('cpu-cores');
+            if (elCores) elCores.innerText = data.cpu.cores;
+            
+            // Check if element exists before setting innerText to avoid errors
+            const termShell = document.getElementById('term-shell');
+            if (termShell) termShell.innerText = isSimulating ? '/bin/zsh' : 'bash';
+            
+            const termUser = document.getElementById('term-user');
+            if (termUser) termUser.innerText = isSimulating ? 'admin' : 'root';
+            
+            updateGauge(Math.round(data.cpu.usage));
+            updateRAM(data.memory.used, data.memory.total, data.memory.free, 640000000); 
+            updateDisk(data.disk);
+            
+            // Only update network if data is present
+            if (data.network) updateNetwork(data.network); 
+            
+            updateProcesses(data.processes);
+            updateBatteryImpact(data.processes);
+
+            // Log Logic
+            const logBox = document.getElementById('mock-logs');
+            if(logBox && Math.random() > 0.7) {
+                const msgs = [
+                    `[SYS] CPU load shift detected: ${data.cpu.usage}%`,
+                    `[NET] Packet inbound on port 3000`,
+                    `[MEM] Garbage collection cycle pending`,
+                    `[KRN] I/O wait state nominal`,
+                    `[PWR] Consumption steady at 65W`
+                ];
+                const newLog = document.createElement('div');
+                newLog.innerHTML = `<span class="text-gray-600 font-mono mr-2">${new Date().toLocaleTimeString()}</span> ${msgs[Math.floor(Math.random() * msgs.length)]}`;
+                newLog.className = "text-green-500/80 hover:text-green-400 transition-colors mb-1";
+                logBox.appendChild(newLog);
+                logBox.scrollTop = logBox.scrollHeight;
+            }
+        }
+
+        setInterval(updateDashboard, 1500);
+        updateDashboard();
+    </script>
+</body>
+</html>
