@@ -37,3 +37,6 @@ This repository demonstrates version control mastery.
 
 
 **Conclusion:** This project successfully demonstrates the full Git workflow from local development to remote synchronization.
+
+
+Verified by: Sonal Kumar
