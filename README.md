@@ -39,4 +39,21 @@ This repository demonstrates version control mastery.
 **Conclusion:** This project successfully demonstrates the full Git workflow from local development to remote synchronization.
 
 
+
+
+
+
+## Project Screenshots
+
+### 1. Git Log History
+Here is the visualization of the commit history and branching:
+
+![Git Log Graph](./screenshots/git-log.png)
+
+### 2. Merge Conflict Resolution
+Evidence of the conflict resolution process:
+
+![Merge Conflict](./screenshots/merge-conflict.png)
+
+
 Verified by: Sonal Kumar
